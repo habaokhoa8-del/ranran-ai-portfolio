@@ -181,3 +181,6 @@ button{border:0;background:none;color:inherit}
 .logic-loop { list-style: none; padding: 0; margin: 24px 0; display: grid; gap: 24px; }
 .logic-loop li { position: relative; padding: 14px 18px; text-align: center; background: #e5f2fc; border: 1px solid #ccdce8; border-radius: 8px; color: #145789; font-weight: 550; }
 .logic-loop li:not(:last-child)::after { content: '\2193'; position: absolute; top: 100%; left: 50%; height: 24px; color: #9ab7cc; }
+.running-chain { white-space: pre; overflow-x: auto; padding: 28px; background: #f2f4f7; border: 1px solid #dce2eb; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Consolas, "PingFang SC", "Microsoft YaHei", monospace; font-size: 15px; line-height: 2; margin: 22px 0; }
+.running-chain:focus-visible { outline: 2px solid #2861df; outline-offset: 3px; }
+@media(max-width:600px){.running-chain{font-size:13px;padding:18px;}}

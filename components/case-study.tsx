@@ -68,7 +68,23 @@ export function CaseStudy({ project: p }: { project: Project }) {
     <section className="story-band ai-story" id="solution"><div className="case-section container">
       <ChapterHeading number="02" label="AI 方案设计" title={story.ai.title} />
       <Reveal><p className="chapter-intro">{story.ai.approach}</p></Reveal>
-      {story.ai.decisions && <div className="chapter-subsection"><NarrativeSteps items={story.ai.decisions} /></div>}
+      {p.slug === 'beike' ? <Reveal className="chapter-subsection"><h3>已运行链路</h3><pre className="running-chain" tabIndex={0} aria-label="内容生产与数据分析运行链路">{`内容参考：小红书企业 API 查询 → 标题与内容分析
+                              ↓
+生产链路：结构化需求 → Skill／模板 → 文案与生图任务
+                              ↓
+          生图 API → 本地图片 → 飞书字段写入／Excel 台账
+                              ↓
+                     人工审核与投放
+
+分析链路：投放 CSV＋审核 Excel＋商机／次留 CSV
+                              ↓
+                 Pandas 清洗、关联与聚合
+                              ↓
+                  指标重算 → Excel 汇总
+                              ↓
+               Python＋Chart.js → HTML 看板
+                              ↓
+                  人工复盘 → 下一轮规则调整`}</pre><p className="chapter-intro">采用 Python 脚本与文件式数据流水线，将内容生产和投放分析拆为两条链路。生产侧通过模型接口与飞书接口衔接素材生成、记录和审核；分析侧使用 Pandas 处理多源文件，输出 Excel 汇总和 HTML 看板，由业务人员根据分析结果调整内容规则。</p></Reveal> : story.ai.decisions && <div className="chapter-subsection"><NarrativeSteps items={story.ai.decisions} /></div>}
       <div id="architecture" className="chapter-subsection"><div className="subsection-heading"><h3>{story.ai.modules ? '整体方案架构' : '业务架构'}</h3><span>逻辑示意 · 非原系统截图</span></div><Architecture modules={story.ai.modules ?? p.modules} projectSlug={p.slug} showText={p.slug !== 'beike'} proposal={Boolean(story.ai.modules)} /></div>
       {story.ai.roles && <div className="chapter-subsection agent-roles"><h3>AI Native 结构化所需的团队角色</h3><p>以下为 Agent 职责设计，不代表五个 Agent 均已部署。</p><ul>{story.ai.roles.map(role => <li key={role.title}><h4>{role.title}</h4><p>{role.text}</p></li>)}</ul></div>}
       {evidence('solution')}
