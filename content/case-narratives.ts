@@ -1,4 +1,5 @@
 import type { Module } from './portfolio';
+import { beikeModules, beikeArchitecture } from './beike-refinement';
 
 // Chapter-specific copy complements the shared project facts without repeating them.
 export type CaseNarrative = {
@@ -9,6 +10,7 @@ export type CaseNarrative = {
   evidence: { chapter: 'context' | 'solution' | 'results' | 'implementation'; title: string; path: string | null; caption: string }[];
   results?: { title: string; text: string }[];
   loop?: string[];
+  moduleDesign?: typeof beikeModules;
 };
 
 export const caseNarratives: Record<string, CaseNarrative> = {
@@ -105,3 +107,11 @@ export const caseNarratives: Record<string, CaseNarrative> = {
     ],
   },
 };
+const beike = caseNarratives.beike;
+beike.ai.decisions = beikeArchitecture;
+beike.ai.roles = undefined;
+beike.moduleDesign = beikeModules;
+beike.data.steps = [];
+beike.data.definitions = undefined;
+beike.data.note = undefined;
+beike.business.analysis = undefined;

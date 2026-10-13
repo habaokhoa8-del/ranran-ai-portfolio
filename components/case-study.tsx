@@ -77,6 +77,7 @@ export function CaseStudy({ project: p }: { project: Project }) {
     <section className="story-band data-story" id="results"><div className="case-section container">
       <ChapterHeading number="03" label="数据分析" title={story.data.title} />
       <NarrativeSteps items={story.data.steps} />
+      {story.moduleDesign && <Reveal className="chapter-subsection"><div className="metric-definitions"><table><caption>模块设计 · 输入、处理、输出与人工边界</caption><thead><tr><th>模块 / 输入</th><th>处理技术</th><th>输出与人工边界</th></tr></thead><tbody>{story.moduleDesign.map(m => <tr key={m.name}><th scope="row">{m.name}<p>{m.input}</p></th><td>{m.processing}</td><td>{m.output}<p>{m.boundary}</p></td></tr>)}</tbody></table></div></Reveal>}
       {story.data.definitions && <Reveal className="chapter-subsection"><div className="metric-definitions"><table><caption>业务指标口径 · 交接 SOP 摘要</caption><thead><tr><th>指标</th><th>计算方式</th><th>核对边界</th></tr></thead><tbody>{story.data.definitions.map(d => <tr key={d.name}><th scope="row">{d.name}</th><td>{d.formula}</td><td>{d.boundary}</td></tr>)}</tbody></table></div>{story.data.note && <p className="content-note">{story.data.note}</p>}</Reveal>}
       <div className="chapter-subsection"><h3>结果与验证</h3>
         {p.slug === 'topify' ? <><div className="case-metrics">{p.metrics.map(m => <Reveal key={m.label}><strong>{m.value}</strong><span>{m.label}</span><small>{m.note}</small></Reveal>)}</div></> : <Reveal><EfficiencyCompare crossborder={p.slug === 'crossborder'} /></Reveal>}
