@@ -115,3 +115,31 @@ beike.data.steps = [];
 beike.data.definitions = undefined;
 beike.data.note = undefined;
 beike.business.analysis = undefined;
+
+const crossborder = caseNarratives.crossborder;
+crossborder.business.analysis = '需求拆解：将每日重复整理转化为文件导入、日期选择、关键词关联、排名变化计算和结果输出。工具负责发现候选机会，业务人员结合市场、竞争与供应情况作最终选品判断。';
+crossborder.ai.title = '将选品分析拆成可重复运行的数据链路。';
+crossborder.ai.approach = '运行链路：ABS CSV 导入 → 新旧日期选择 → 关键词关联 → 排名变化与新增词分析 → Top20 / Top50 结果 → 人工核对与选品。GPT、Gemini、Claude 与 Cursor 用于辅助需求拆解、代码生成、调试和迭代；排名计算不需要每次调用大模型。';
+crossborder.ai.decisions = [
+  { title: '架构设计 · 输入、分析、展示分层', text: '输入层管理搜索数据与日期；分析层负责关键词对比及结果筛选；展示层提供一键分析、结果表格与历史数据管理。将业务规则与界面分离，便于独立核对计算结果。' },
+  { title: '数据处理选型 · 工程化方案', text: 'Python / Pandas 承担清洗、关联与排序；DuckDB / Parquet 用于历史数据存储及 SQL 查询。CSV 保留为导入入口，避免重复解析历史文件。具体库为补充设计，不作为原工具技术栈证明。' },
+  { title: '交互与验证选型 · 工程化方案', text: 'Streamlit / Plotly 用于日期选择、结果表格和趋势呈现；pytest 用固定样例验证新增词识别、排名差值及异常输入。进一步筛选可结合增长幅度与连续增长天数，不以排名变化代替完整市场评估。' },
+];
+crossborder.data.title = '模块职责清晰，计算结果可以核对。';
+crossborder.data.steps = [];
+crossborder.moduleDesign = [
+  { name: '数据输入', input: 'ABS 搜索 CSV 与历史日期', processing: '文件导入、日期组织；字段与类型校验作为增强设计', output: '可对比的数据集合', boundary: '人工确认来源、日期及完整性' },
+  { name: '关键词关联', input: '选定的新旧日期数据', processing: '按关键词对比两期记录；Pandas merge / DuckDB SQL 为实现选型', output: '跨日期对照与新增词', boundary: '重复词及大小写归一规则需验证' },
+  { name: '排名分析', input: '新旧排名与关键词', processing: '旧排名减新排名，按增长值排序并区分新增词', output: '排名增长 Top20、新增词 Top50', boundary: '排名下降与缺失值不混作新增词' },
+  { name: '结果展示', input: '分析结果与日期', processing: '一键分析、表格查看、历史数据管理；趋势图为增强方案', output: '选品分析结果', boundary: '人工结合竞争、供应与市场判断' },
+];
+crossborder.results = [
+  { title: '效率验证 · 项目记录', text: '单日选品分析由 3 小时以上缩短至约 15 分钟，反映整理与分析流程的耗时变化，不代表选品决策全部自动化。' },
+  { title: '业务结果 · 辅助贡献', text: '辅助美国站首月销售额达到 6000+ 美元；销售额属于整体业务成果，不归因于工具直接创造。' },
+  { title: '功能验证 · 真实界面', text: '提供的截图展示新旧日期选择、一键分析、排名增长与新增词结果；截图用于说明工具功能，不作为算法准确率或销售效果证明。' },
+  { title: '测试设计 · 待补记录', text: '以固定样例核对关键词关联、排名差值、新增词识别，并覆盖重复关键词、缺失日期和异常文件；尚无完整测试记录，不展示虚构通过率。' },
+];
+crossborder.product.title = '交付分析工具，保留人工选品决策。';
+crossborder.product.output = 'CSV 导入、新旧日期对比、一键分析、排名增长与新增词结果、历史数据管理。';
+crossborder.product.boundary = '运营人员核对数据和候选关键词，结合竞争、供应与市场信息作最终选品判断。';
+crossborder.product.next = '按上述工程化方案补充历史数据查询、趋势展示与回归测试，验证后再纳入交付范围。';
