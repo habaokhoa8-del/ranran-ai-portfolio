@@ -105,11 +105,30 @@ export function CaseStudy({ project: p }: { project: Project }) {
     </div></section>
 
     <section className="story-band product-story" id="implementation"><div className="case-section container">
-      <ChapterHeading number="04" label="产品化思维" title={story.product.title} />
+      <ChapterHeading number="04" label="产品化思维" title={p.slug === 'topify' ? '交付可复用的工具，明确协作与迭代边界。' : story.product.title} />
+      {p.slug === 'topify' ? <>
+        <div className="product-decisions">
+          <Reveal><span className="eyebrow">交付与复用</span><h3>交付物</h3><dl className="handoff-list">
+            <div><dt>采集与分析</dt><dd>批量导出 Agent、分析 Agent、桌面识别及数据处理脚本。</dd></div>
+            <div><dt>内容与监测</dt><dd>内容 Skill、账号检测 Skill。</dd></div>
+            <div><dt>协作与知识</dt><dd>实验台账、归因链路分析飞书知识库。</dd></div>
+          </dl></Reveal>
+          <Reveal><span className="eyebrow">人工审核边界</span><h3>审核责任</h3><dl className="handoff-list">
+            <div><dt>内容运营</dt><dd>审核内容，维护实验标签与发布记录。</dd></div>
+            <div><dt>客户沟通 / SDR 人员</dt><dd>核对客资来源，通过客户沟通判断质量，记录跟进结果。</dd></div>
+            <div><dt>业务负责人</dt><dd>确认策略调整与下一轮实验决策。</dd></div>
+          </dl></Reveal>
+        </div>
+        <Reveal className="chapter-subsection"><h3>后续迭代</h3><dl className="handoff-list">
+          <div><dt>客户沟通 Bot 与私信自动化 · 后续规划</dt><dd>探索需求识别与沟通辅助，客资质量和业务判断仍保留人工。</dd></div>
+          <div><dt>自动内容反馈 · 方案设计</dt><dd>将归因结论反馈至下一轮内容生成，继续验证自动反馈链路；当前由人工复盘并调整内容规则。</dd></div>
+        </dl></Reveal>
+      </> : <>
       <div className="product-decisions"><Reveal><span className="eyebrow">交付与复用</span><h3>{p.slug === 'beike' ? '交付物' : '留下什么'}</h3>{p.slug === 'beike' ? <dl className="handoff-list">{beikeHandoff.map(item => <div key={item.title}><dt>{item.title}</dt><dd>{item.text}</dd></div>)}</dl> : <p>{story.product.output}</p>}</Reveal><Reveal><span className="eyebrow">人工审核边界</span><h3>{p.slug === 'beike' ? '审核责任' : '谁负责最终判断'}</h3>{p.slug === 'beike' ? <dl className="handoff-list">{beikeReviewOwners.map(item => <div key={item.title}><dt>{item.title}</dt><dd>{item.text}</dd></div>)}<div><dt>流程关口</dt><dd>正文确认 → 飞书记录核对 → 生图 → 素材审核 → 人工投放；审核反馈回写 Skill 规则。</dd></div></dl> : <p>{story.product.boundary}</p>}</Reveal></div>
       <details className="evidence-disclosure delivery-disclosure"><summary><span>交付状态与已知限制 <small>已实现 / 方案设计 / 后续规划</small></span><ChevronDown size={19} /></summary><div className="delivery-register">{(story.product.delivery ?? p.modules.map(m => ({ title: m.title, status: m.status, text: m.human }))).map(item => <div key={item.title}><strong>{item.title}</strong><span className={`delivery ${item.status === '已实现' ? 'done' : item.status === '后续规划' ? 'planned' : 'designed'}`}>{item.status}</span><p>{item.text}</p></div>)}</div></details>
       {evidence('implementation')}
       <div className="chapter-subsection" id="reflection"><Reveal><div className="subsection-heading"><h3>复盘与下一步</h3></div><p className="chapter-intro">{story.product.next}</p></Reveal><div className="reflection-list">{p.lessons.map((lesson, i) => <Reveal key={lesson}><span>0{i + 1}</span><p>{lesson}</p></Reveal>)}</div></div>
+      </>}
       <div className="case-ending"><Link href="/#projects" className="button secondary"><ArrowLeft size={16} />返回项目列表</Link><CaseLink slug={next.slug}>下一个案例：{next.title}</CaseLink></div>
     </div></section>
   </main>;
