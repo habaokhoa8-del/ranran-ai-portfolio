@@ -1,3 +1,16 @@
+export const beikeHandoff = [
+  { title: '内容规则', text: '12 版 Skill 迭代；已跑通的 v5.6 规则、5 类图片 Prompt、标题与笔记台账。' },
+  { title: '生产脚本', text: '批量生图脚本、飞书字段写入说明与 Excel 台账。' },
+  { title: '数据分析', text: '数据处理 SOP、指标公式、全量汇总模板与 HTML 看板模型。' },
+  { title: '接手文档', text: '运行步骤、审核节点与看板需求文档。' },
+];
+
+export const beikeReviewOwners = [
+  { title: '业务人员', text: '确认客户需求、账户目标与批次信息；核对指标口径和分析结论。' },
+  { title: '运营与甲方', text: '审核文案、图片与修改意见；确认事实、表达和合规。' },
+  { title: '优化师', text: '负责账户搭建、投放设置、素材上线与投放调整。' },
+];
+
 export const beikeModules = [
   { name: '内容参考', input: '租房、买房类帖子查询条件', processing: '小红书企业 API 查询，分析表现较好的标题与内容', output: '选题与模板迭代参考', boundary: '人工判断内容适用性' },
   { name: '规则与模板', input: '账户目标、内容需求、历史台账', processing: 'Skill 约束、Excel 模板读取、正文拆分与变量替换', output: '文案与封面 / 正文 / 尾图 Prompt', boundary: '确认需求、事实与合规' },
