@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Native 业务闭环链路图</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #0f0f1a;
+      color: #f0f0f0;
+      line-height: 1.7;
+      padding: 40px 20px 80px;
+    }
+
+    .page-title {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .page-title h1 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff2d55, #ff6b35);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .page-title p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    /* 主链路 */
+    .pipeline {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      margin-bottom: 56px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .pipeline-node {
+      flex: 1;
+      min-width: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .pipeline-node:not(:last-child)::after {
+      content: '➡️';
+      position: absolute;
+      right: -18px;
+      top: 22px;
+      font-size: 18px;
+      z-index: 2;
+    }
+
+    .node-box {
+      width: 100%;
+      background: #1e1e30;
+      border: 1.5px solid #333;
+      border-radius: 14px;
+      padding: 18px 14px;
+      text-align: center;
+      position: relative;
+    }
+
+    .node-box.highlight {
+      border-color: #ff2d55;
+      box-shadow: 0 0 18px rgba(255,45,85,0.18);
+    }
+
+    .node-box.done {
+      border-color: #00b37e;
+      box-shadow: 0 0 18px rgba(0,179,126,0.15);
+    }
+
+    .node-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+    .node-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .node-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.5;
+    }
+
+    .node-badge {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-done { background: #00b37e; color: #fff; }
+    .badge-wip  { background: #ff6b35; color: #fff; }
+    .badge-todo { background: #444; color: #ccc; }
+
+    /* 策略前置 */
+    .pre-strategy {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 12px;
+      padding-left: calc(0% + 8px);
+    }
+    .strategy-box {
+      background: #1a1a2e;
+      border: 1.5px dashed #7c5cbf;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      max-width: 260px;
+      position: relative;
+    }
+    .strategy-box::after {
+      content: '⬇️';
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+    }
+    .strategy-box .s-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #b39ddb;
+      margin-bottom: 6px;
+    }
+
+    /* 详细说明卡片 */
+    .section { margin-bottom: 40px; }
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ff6b35;
+      border-left: 3px solid #ff6b35;
+      padding-left: 10px;
+      margin-bottom: 16px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .cards.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .card {
+      background: #1e1e30;
+      border-radius: 14px;
+      padding: 20px;
+      border-top: 3px solid #333;
+    }
+    .card.red   { border-top-color: #ff2d55; }
+    .card.orange{ border-top-color: #ff6b35; }
+    .card.green { border-top-color: #00b37e; }
+    .card.purple{ border-top-color: #7c5cbf; }
+    .card.blue  { border-top-color: #4a90d9; }
+
+    .card .c-icon { font-size: 22px; margin-bottom: 8px; display: block; }
+    .card .c-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .card .c-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.7;
+    }
+    .card ul { padding-left: 16px; margin-top: 6px; }
+    .card ul li { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+
+    /* 团队角色 */
+    .roles {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    .role-item {
+      background: #1e1e30;
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+      border: 1px solid #2a2a40;
+    }
+    .role-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff2d55, #ff6b35);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 8px;
+    }
+    .role-title { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .role-desc  { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+    /* 当前状态 */
+    .status-bar {
+      background: #1a2a1a;
+      border: 1.5px solid #00b37e;
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .status-bar .s-icon { font-size: 28px; flex-shrink: 0; }
+    .status-bar .s-text { font-size: 13px; color: rgba(255,255,255,0.8); }
+    .status-bar .s-text b { color: #00b37e; }
+
+    @media (max-width: 700px) {
+      .pipeline { flex-direction: column; }
+      .pipeline-node:not(:last-child)::after { content: '⬇️'; right: unset; top: unset; bottom: -22px; left: 50%; transform: translateX(-50%); }
+      .cards, .cards.three, .roles { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="page-title">
+    <h1>AI Native 广告业务闭环链路 · 公开展示版</h1>
+    <p>从策略拿客户 → 投放运营 → 数据迭代 全链路 AI 化路径</p>
+  </div>
+
+  <!-- 当前进度 -->
+  <div class="status-bar">
+    <div class="s-icon">✅</div>
+    <div class="s-text">
+      <b>当前已打通：</b>内容生产闭环。
+      下一步攻坚：客户对接 AI Bot / 账户独立投放闭环 / 数据反馈迭代内容。
+    </div>
+  </div>
+
+  <!-- 策略前置 -->
+  <div class="pre-strategy">
+    <div class="strategy-box">
+      <div class="s-title">📋 策略报告（前置）</div>
+      写策略报告拿下客户，是整条链路的起点。策略质量决定客户是否愿意进入后续流程。
+    </div>
+  </div>
+
+  <!-- 主链路 -->
+  <div class="pipeline">
+
+    <div class="pipeline-node">
+      <div class="node-box highlight">
+        <span class="node-badge badge-wip">攻坚中</span>
+        <span class="node-icon">🤝</span>
+        <div class="node-label">客户对接</div>
+        <div class="node-sub">沟通需求<br>传达 KPI</div>
+      </div>
+    </div>
+
+    <div class="pipeline-node">
+      <div class="node-box highlight">
+        <span class="node-badge badge-wip">攻坚中</span>
+        <span class="node-icon">🤖</span>
+        <div class="node-label">AI Bot / Web 产品</div>
+        <div class="node-sub">收集需求反馈<br>提供解决建议</div>
+      </div>
+    </div>
+
+    <div class="pipeline-node">
+      <div class="node-box">
+        <span class="node-badge badge-todo">规划中</span>
+        <span class="node-icon">⚙️</span>
+        <div class="node-label">优化师搭建账户</div>
+        <div class="node-sub">计划/单元<br>出价策略</div>
+      </div>
+    </div>
+
+    <div class="pipeline-node">
+      <div class="node-box done">
+        <span class="node-badge badge-done">已打通</span>
+        <span class="node-icon">✍️</span>
+        <div class="node-label">内容批量生产</div>
+        <div class="node-sub">AI 自动生成<br>图文素材</div>
+      </div>
+    </div>
+
+    <div class="pipeline-node">
+      <div class="node-box highlight">
+        <span class="node-badge badge-wip">攻坚中</span>
+        <span class="node-icon">📊</span>
+        <div class="node-label">投放 & 数据回收</div>
+        <div class="node-sub">数据处理 SOP<br>指标自动计算</div>
+      </div>
+    </div>
+
+    <div class="pipeline-node">
+      <div class="node-box highlight">
+        <span class="node-badge badge-wip">攻坚中</span>
+        <span class="node-icon">🔄</span>
+        <div class="node-label">数据迭代</div>
+        <div class="node-sub">反馈内容方向<br>持续优化</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 客户侧 AI 能力 -->
+  <div class="section">
+    <div class="section-title">💡 客户对接侧：AI Native 两种形态</div>
+    <div class="cards">
+      <div class="card red">
+        <span class="c-icon">🤖</span>
+        <div class="c-title">AI Bot</div>
+        <div class="c-desc">
+          对话式收集客户需求和反馈，实时给出建议和解决方案。需要两块能力支撑：
+          <ul>
+            <li>数据处理：结构化理解客户投放数据（公司已在推进）</li>
+            <li>公司记忆：历史案例、行业经验的知识库调用</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card orange">
+        <span class="c-icon">🌐</span>
+        <div class="c-title">Web2 产品页面</div>
+        <div class="c-desc">
+          结构化的客户门户，用于：
+          <ul>
+            <li>客户提交需求 / KPI 目标</li>
+            <li>查看投放报告和数据反馈</li>
+            <li>收到 AI 生成的解决建议</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 承接客户的三要素 -->
+  <div class="section">
+    <div class="section-title">💡 承接客户的三要素（优化师 → 内容侧）</div>
+    <div class="cards three">
+      <div class="card purple">
+        <span class="c-icon">🏷️</span>
+        <div class="c-title">① 品牌</div>
+        <div class="c-desc">公司品牌背书，让客户对服务方产生信任感和认可度</div>
+      </div>
+      <div class="card blue">
+        <span class="c-icon">🤲</span>
+        <div class="c-title">② 服务</div>
+        <div class="c-desc">
+          双层服务能力：
+          <ul>
+            <li>情绪价值：承接客户的焦虑和诉求，让客户感到被照顾</li>
+            <li>策略服务：策略报告给出的专业解决方案</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card green">
+        <span class="c-icon">📈</span>
+        <div class="c-title">③ 结果</div>
+        <div class="c-desc">优化师 + 内容迭代后的数据反馈，用真实结果证明价值</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Native 结构化所需团队 -->
+  <div class="section">
+    <div class="section-title">👥 AI Native 结构化所需的团队角色</div>
+    <div class="roles">
+      <div class="role-item">
+        <div class="role-num">1</div>
+        <div class="role-title">问题发现者</div>
+        <div class="role-desc">发现整个链路的问题，提出需求和解决方案</div>
+      </div>
+      <div class="role-item">
+        <div class="role-num">2</div>
+        <div class="role-title">方案拆解者</div>
+        <div class="role-desc">对解决方案进行模块拆解，分配执行路径</div>
+      </div>
+      <div class="role-item">
+        <div class="role-num">3</div>
+        <div class="role-title">业务结构化</div>
+        <div class="role-desc">将原本模糊的业务流程拆解成 AI 可处理的结构化任务</div>
+      </div>
+      <div class="role-item">
+        <div class="role-num">4</div>
+        <div class="role-title">Token 优化</div>
+        <div class="role-desc">解决 token 消耗过高问题，优化 prompt 和调用策略</div>
+      </div>
+      <div class="role-item">
+        <div class="role-num">5</div>
+        <div class="role-title">安全负责</div>
+        <div class="role-desc">数据安全、权限管控、客户信息保护</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 可自动化环节 -->
+  <div class="section">
+    <div class="section-title">⚡ 可 AI 自动化的环节</div>
+    <div class="cards">
+      <div class="card green">
+        <span class="c-icon">📥</span>
+        <div class="c-title">客户需求收集</div>
+        <div class="c-desc">用结构化表单或 AI Bot 替代人工问答，把"客户要什么"转成标准字段。首次建立信任那层仍需人工，后续需求更新可自动化。AI Bot 识别客户意图和需求后，自动反馈给优化师对应的账户搭建策略建议。</div>
+      </div>
+      <div class="card green">
+        <span class="c-icon">📋</span>
+        <div class="c-title">策略报告生成</div>
+        <div class="c-desc">给定客户行业 + KPI + 竞品，自动生成策略报告初稿。现在就能做，只差把输入格式固定下来。</div>
+      </div>
+      <div class="card green">
+        <span class="c-icon">✍️</span>
+        <div class="c-title">内容批量生产</div>
+        <div class="c-desc">已打通。自动批量生成图文素材，当前主线已跑通。</div>
+      </div>
+      <div class="card green">
+        <span class="c-icon">📊</span>
+        <div class="c-title">数据处理 & 指标计算</div>
+        <div class="c-desc">已打通。数据处理 SOP 已固化，激活成本、商机转化率等指标全部自动计算输出。</div>
+      </div>
+      <div class="card green">
+        <span class="c-icon">🔍</span>
+        <div class="c-title">数据分析 & 迭代建议</div>
+        <div class="c-desc">每周数据跑完，自动生成"哪些方向在涨、哪些在跌、下周建议调整什么"的分析报告。最好以数据看板形式呈现，把账户数据和内容建议串联在一起，分两块：① 客户端——客户可实时查看投放进展和结果；② 内部端——供优化师和内容侧调整方向使用。</div>
+      </div>
+      <div class="card green">
+        <span class="c-icon">📄</span>
+        <div class="c-title">投放日报 / 周报生成</div>
+        <div class="c-desc">数据进来，报告自动出。完全可以自动化。</div>
+      </div>
+    </div>
+    <div class="note-box" style="background: #1a1a2e; border-color: #555; margin-top: 16px; color: rgba(255,255,255,0.6);">
+      ⚠️ <b style="color:#fff;">自动化不了的：</b>客户关系维护与情绪承接 / 平台审核应对 / 账户冷启动期人工调优
+    </div>
+  </div>
+
+  <!-- 当前链路难点 -->
+  <div class="section">
+    <div class="section-title">⚠️ 整条链路的核心难点</div>
+    <div class="cards">
+      <div class="card red">
+        <span class="c-icon">🗣️</span>
+        <div class="c-title">1. 客户需求结构化</div>
+        <div class="c-desc">客户说的话是模糊的——"我想要更多转化""内容感觉不对"。AI Bot 能收信息，但把非结构化反馈转成"调整内容方向 X、出价策略 Y"，中间需要一套映射逻辑，目前没有现成方案，要自己摸。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：用 AI Bot 引导客户说出 KPI、预算、竞品等关键信息，AI 自动解析成结构化字段，并给出相应的投放策略和内容生产建议；同时 AI Bot 实时回应客户问题，人工在旁辅助处理复杂情况。</div>
+      </div>
+      <div class="card red">
+        <span class="c-icon">📋</span>
+        <div class="c-title">1.5 策略输入永远残缺</div>
+        <div class="c-desc">客户给的信息永远不完整——KPI 没有、竞品说不清楚、行业背景一句话带过。以为能自动生成策略报告，实际上70%的时间在补信息，自动化前提不成立。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：用 AI Bot 引导客户说出 KPI、预算、竞品等关键信息，AI 自动解析成结构化字段，并给出相应的投放策略和内容生产建议。</div>
+      </div>
+      <div class="card red">
+        <span class="c-icon">💬</span>
+        <div class="c-title">2. 客户沟通与情绪承接</div>
+        <div class="c-desc">直接对接客户不只是传递信息，还要建立信任、管理预期和处理反馈。这部分保留人工负责。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：沉淀通用沟通模板和问题分类，由业务人员处理复杂情况。</div>
+      </div>
+      <div class="card orange">
+        <span class="c-icon">🧠</span>
+        <div class="c-title">3. 公司记忆 / 知识库建设？</div>
+        <div class="c-desc">历史客户案例、优质内容模板、各行业投放经验——这些要被 AI 在对话中正确调用，需要先做结构化存储（RAG / 知识库），不是一个 Bot 就能解决的，是持续维护的基建，工程量最大。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：先做最小版本——把过往跑出来的好内容、好方向存成文档，每次生成前手动喂给 AI 作为上下文，积累到一定量再考虑向量数据库。</div>
+      </div>
+      <div class="card orange">
+        <span class="c-icon">⚡</span>
+        <div class="c-title">3.5 账户搭建策略谁拍板</div>
+        <div class="c-desc">AI Bot 识别出"客户要提升转化率"之后，转成具体账户搭建策略没有标准答案，不同优化师做法不一样，AI 给的建议优化师未必认可——这个断层目前没有解法。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：AI 只出选项不拍板，给优化师 2-3 套方案 + 各自适用场景，人来决策，AI 帮完善细节。把 AI 定位成"出方案的"，人定位成"决策的"。</div>
+      </div>
+      <div class="card purple">
+        <span class="c-icon">🧭</span>
+        <div class="c-title">4. 客户沟通与投放账户不熟悉</div>
+        <div class="c-desc">客户沟通与账户搭建有明确的业务判断边界，需要结合实际场景确认标准流程。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：基于通用沟通模板和账户操作规范，先验证流程再扩大应用。</div>
+      </div>
+      <div class="card blue">
+        <span class="c-icon">🔗</span>
+        <div class="c-title">5. 各节点数据格式不通</div>
+        <div class="c-desc">客户沟通产出文字，内容产出图文，投放产出 CSV——三块格式完全不同。要让整条链路自动流转，需要在每个节点之间做数据转换和标准化，工程量不小。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：定义一个中间层数据格式，所有节点输出统一转成标准结构，之后每增加新节点只需对接这个中间格式。</div>
+      </div>
+      <div class="card blue">
+        <span class="c-icon">📥</span>
+        <div class="c-title">5.5 数据源还是手动触发</div>
+        <div class="c-desc">数据处理 SOP 已跑通，但每次还是要人工下载 CSV。小红书后台能否定时导出、能否 API 对接，还没打通——真正的自动化需要数据源自动推进来。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：短期接受手动，通过调研发现小红书 API 可实现自动化则可以接入自动分析。</div>
+      </div>
+      <div class="card blue">
+        <span class="c-icon">📊</span>
+        <div class="c-title">5.8 数据口径对不上</div>
+        <div class="c-desc">客户那边可能用另一套系统看数据，两边数字对不上时，解释成本比生成报告的成本高得多。报告生成不难，难在口径对齐。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：第一次对接时和客户对齐口径，写进合作说明；每份报告开头加"口径说明"，让客户先看定义再看数字。</div>
+      </div>
+      <div class="card green">
+        <span class="c-icon">🚧</span>
+        <div class="c-title">6. 投放账户操作未自动化</div>
+        <div class="c-desc">内容生成已跑通，但"内容 → 上传投放平台 → 绑定计划 → 调整出价"这段还是手动的。小红书 API 开放程度有限，这块能自动化到什么程度需要先调研。</div>
+        <div class="c-desc" style="margin-top:8px;color:#7fffb0;">✅ 解法：先调研小红书投放平台 API 开放范围，能接的部分先接，不能接的暂时保持手动，优先把其他环节跑通。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作优先级 -->
+  <div class="section">
+    <div class="section-title">🎯 操作优先级 <span style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.45);">先从客户切入还是先从账户切入？</span></div>
+    <div class="steps" style="display:flex;flex-direction:column;gap:12px;">
+
+      <div style="background:#1e1e30;border-radius:14px;padding:20px 24px;border-left:4px solid #ff2d55;">
+        <div style="font-size:12px;font-weight:700;color:#ff2d55;margin-bottom:10px;">P0</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:13px;color:#fff;">1. <b>需求收集 AI Bot</b> <span style="color:rgba(255,255,255,0.5);font-size:12px;">— 通过过往聊天记录查看对话风格和客户痛点</span></div>
+          <div style="font-size:13px;color:#fff;">2. <b>数据口径对齐文档</b> <span style="color:rgba(255,255,255,0.5);font-size:12px;">— 理清客户项目的数据口径</span></div>
+        </div>
+      </div>
+
+
+
+      <div style="background:#1e1e30;border-radius:14px;padding:20px 24px;border-left:4px solid #ff6b35;">
+        <div style="font-size:12px;font-weight:700;color:#ff6b35;margin-bottom:10px;">P1 · 有了账户再做</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:13px;color:#fff;">3. <b>账户搭建策略模板</b> <span style="color:rgba(255,255,255,0.5);font-size:12px;">— AI 出 2-3 套方案供优化师选，需要先有账户验证</span></div>
+          <div style="font-size:13px;color:#fff;">4. <b>中间层数据格式</b> <span style="color:rgba(255,255,255,0.5);font-size:12px;">— 统一各节点输出结构，需要先把几个节点都跑起来才能定</span></div>
+        </div>
+      </div>
+
+      <div style="background:#1e1e30;border-radius:14px;padding:20px 24px;border-left:4px solid #7c5cbf;">
+        <div style="font-size:12px;font-weight:700;color:#b39ddb;margin-bottom:10px;">P2 · 长期</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:13px;color:#fff;">5. <b>小红书 API 调研</b> <span style="color:rgba(255,255,255,0.5);font-size:12px;">— 看能否接入自动数据推送，替代手动下载 CSV</span></div>
+          <div style="font-size:13px;color:#fff;">6. <b>数据看板搭建</b> <span style="color:rgba(255,255,255,0.5);font-size:12px;">— 客户端 + 内部端，等数据流稳定后再做</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
